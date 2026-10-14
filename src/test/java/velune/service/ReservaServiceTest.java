@@ -1,7 +1,7 @@
 package velune.service;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.cglib.core.Local;
+import velune.exception.QuartoIndisponivelException;
 import velune.model.Hospede;
 import velune.model.Quarto;
 import velune.model.Reserva;
@@ -13,10 +13,8 @@ import velune.repository.ReservaRepository;
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
-
 
 public class ReservaServiceTest {
 
@@ -56,10 +54,34 @@ public class ReservaServiceTest {
 
         when(reservaRepository.findByQuarto(quarto)).thenReturn(List.of(reserva));
 
-        boolean disponivel = service.quartoDisponivel(quarto, LocalDate.of(2026, 12, 05),
+        boolean disponivel = service.quartoDisponivel(quarto, LocalDate.of(2026, 12, 5),
                 LocalDate.of(2026, 12, 12));
 
         assertFalse(disponivel);
+    }
+
+    @Test
+    void naoDeveSalvarQuandoQuartoEstaIndisponivel() {
+
+        ReservaRepository reservaRepository = org.mockito.Mockito.mock(ReservaRepository.class);
+        QuartoRepository quartoRepository = org.mockito.Mockito.mock(QuartoRepository.class);
+        HospedeRepository hospedeRepository = org.mockito.Mockito.mock(HospedeRepository.class);
+
+        ReservaService service = new ReservaService(
+                hospedeRepository, reservaRepository, quartoRepository);
+
+        Quarto quarto = new Quarto(101, TipoQuarto.SIMPLES);
+        Hospede hospede = new Hospede("Marcos", "123");
+        Reserva reserva = new Reserva(hospede, quarto, LocalDate.of(2026, 12, 1), LocalDate.of(2026, 12, 10), null);
+        Reserva reserva1 = new Reserva(hospede, quarto, LocalDate.of(2026, 12, 5), LocalDate.of(2026, 12, 12), null);
+
+        when(reservaRepository.findByQuarto(quarto)).thenReturn(List.of(reserva));
+
+        boolean dispo = service.quartoDisponivel(quarto, reserva1.getDataCheckIn(), reserva1.getDataCheckOut());
+
+        assertThrows(QuartoIndisponivelException.class, () -> service.criarReserva(reserva1));
+        
+
     }
 }
 
