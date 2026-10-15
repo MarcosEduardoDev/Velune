@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HospedeJaExisteException.class)
     public ResponseEntity<String> tratarErroHospedeExistente(HospedeJaExisteException ex) {
 
-        return ResponseEntity.badRequest().body(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
     @ExceptionHandler(HospedeNaoEncontradoException.class)
@@ -60,5 +60,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> tratarFuncionarioNaoEncontrado(FuncionarioNaoEncontradoException ex) {
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(QuartoExistenteException.class)
+    public ResponseEntity<String> tratarQuartoExistente(QuartoExistenteException ex) {
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 }

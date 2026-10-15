@@ -22,7 +22,6 @@ public class QuartoService {
         if (repository.existsByNumero(quartoRequestDTO.getNumero())){
             throw new QuartoExistenteException("Já existe um quarto com esse número.");
         }
-
         Quarto quarto = new Quarto(quartoRequestDTO.getNumero(), quartoRequestDTO.getTipo());
         return repository.save(quarto);
     }

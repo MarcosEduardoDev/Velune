@@ -72,12 +72,6 @@ public class Reserva {
                 "Observação: " + observacao;
     }
 
-    public boolean contemData(LocalDate data){
-        boolean depoisDoCheckIn = !data.isBefore(dataCheckIn);
-        boolean antesDoCheckOut = !data.isAfter(dataCheckOut);
-        return antesDoCheckOut && depoisDoCheckIn;
-    }
-
     public double calcularValor() {
         long dias = ChronoUnit.DAYS.between(dataCheckIn, dataCheckOut);
         return dias * quarto.getTipo().getPrecoDiaria();
