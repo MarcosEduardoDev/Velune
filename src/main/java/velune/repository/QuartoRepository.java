@@ -14,3 +14,6 @@ public interface QuartoRepository extends JpaRepository<Quarto, Long> {
     boolean existsByNumero(Integer numero);
 
 }
+
+
+

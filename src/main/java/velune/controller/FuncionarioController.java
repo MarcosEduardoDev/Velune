@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import velune.dto.EscalaRequestDTO;
 import velune.dto.FuncionarioRequestDTO;
+import velune.model.Escala;
 import velune.model.Funcionario;
 import velune.service.FuncionarioService;
 
@@ -45,6 +46,12 @@ public class FuncionarioController {
 
         Funcionario funcionario = service.definirEscala(id, escalaDTO.getTurno(), escalaDTO.getData());
         return ResponseEntity.status(HttpStatus.CREATED).body(funcionario);
+    }
+
+    @GetMapping("/funcionarios/{id}/escalas")
+    public List<Escala> listarEscalas(@PathVariable Long id) {
+
+        return service.listarEscalasPorId(id);
     }
 
 }
