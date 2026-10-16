@@ -1,13 +1,15 @@
 package velune.service;
 
-import jakarta.transaction.Transactional;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import velune.dto.EscalaResponseDTO;
 import velune.dto.FuncionarioRequestDTO;
 import velune.dto.FuncionarioResponseDTO;
 import velune.exception.FuncionarioNaoEncontradoException;
-import velune.model.*;
+import velune.model.Escala;
+import velune.model.Funcionario;
+import velune.model.Notificacao;
+import velune.model.Turno;
 import velune.repository.FuncionarioRepository;
 
 import java.time.LocalDate;
@@ -55,25 +57,16 @@ public class FuncionarioService {
         return repository.save(funcionario);
     }
 
-    @Transactional(readOnly = true)
-    public List<Escala> listarEscalasPorId(Long funcionarioId) {
-
-        Funcionario funcionario = buscarPorId(funcionarioId);
-        return funcionario.listarEscalas();
-    }
 
     @Transactional(readOnly = true)
     public FuncionarioResponseDTO escalaFuncionario(Long funcionarioId){
 
         Funcionario funcionario = buscarPorId(funcionarioId);
         List<EscalaResponseDTO> escalas = funcionario.listarEscalas().stream()
-                .map(e -> new EscalaResponseDTO(e.getTurno(), e.getData())
+                .map(e -> new EscalaResponseDTO(e.getTurno(), e.getData()))
                 .toList();
 
-        return new FuncionarioResponseDTO(funcionario.getNome(), funcionario.getCargo());
-
-
-
+        return new FuncionarioResponseDTO(funcionario.getNome(), funcionario.getCargo(), escalas);
     }
 
 

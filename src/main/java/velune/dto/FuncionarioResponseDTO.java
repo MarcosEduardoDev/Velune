@@ -5,5 +5,5 @@ import velune.model.Escala;
 
 import java.util.List;
 
-public record FuncionarioResponseDTO(String nome, Cargo cargo) {
+public record FuncionarioResponseDTO(String nome, Cargo cargo, List<EscalaResponseDTO> escalas) {
 }
