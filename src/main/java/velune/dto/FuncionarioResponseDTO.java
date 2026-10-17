@@ -1,7 +1,6 @@
 package velune.dto;
 
 import velune.model.Cargo;
-import velune.model.Escala;
 
 import java.util.List;
 
