@@ -6,11 +6,7 @@ import jakarta.persistence.*;
 public class Hospede {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "hospede_id_seq")
-    @SequenceGenerator(
-            name = "hospede_id_seq",
-            sequenceName = "hospede_id_seq",
-            allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String nome;
