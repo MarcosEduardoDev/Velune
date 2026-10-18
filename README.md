@@ -1,164 +1,184 @@
-# Velune
+# Velune · Hotel Management API
 
-<p align="center">
-  <strong>Hotel Management System · Java Backend Project</strong><br>
-  Uma aplicação em desenvolvimento para praticar construção de APIs backend com Java e Spring Boot, usando um domínio realista de gestão hoteleira.
-</p>
+![CI](https://github.com/MarcosEduardoDev/Velune/actions/workflows/ci.yml/badge.svg)
+![Java 25](https://img.shields.io/badge/Java-25-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.1.1-6DB33F?style=flat-square&logo=springboot&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Java-25-ED8B00?style=flat-square&logo=openjdk&logoColor=white" alt="Java 25">
-  <img src="https://img.shields.io/badge/Spring_Boot-4.1.1-6DB33F?style=flat-square&logo=springboot&logoColor=white" alt="Spring Boot">
-  <img src="https://img.shields.io/badge/PostgreSQL-Database-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
-  <img src="https://img.shields.io/badge/Maven-Build-C71A36?style=flat-square&logo=apachemaven&logoColor=white" alt="Maven">
-  <img src="https://img.shields.io/badge/JUnit_+_Mockito-Testing-25A162?style=flat-square" alt="JUnit and Mockito">
-</p>
+🇧🇷 [Leia em português](README.pt-BR.md)
 
-> **Status: em desenvolvimento.** Hóspedes, quartos e reservas estão conectados à API e ao PostgreSQL. O módulo de equipe e alguns indicadores do painel ainda usam dados de demonstração.
+REST API for hotel management, built with Java and Spring Boot. It manages guests, rooms, reservations and staff schedules, and stores data in PostgreSQL. The project has a layered architecture, business rules covered by unit tests, and a CI pipeline that runs the tests on every push.
 
----
+> **Status:** portfolio project in active development. See [Known limitations](#known-limitations).
 
-## Visão geral
+## A 2-minute tour
 
-O **Velune** é um projeto prático para desenvolver minhas habilidades em backend Java. Em vez de ficar apenas em exercícios isolados, estou construindo uma aplicação que reúne regras de negócio, persistência de dados, validação e uma interface web.
+1. **Reservation rule:** [`ReservaService`](src/main/java/velune/service/ReservaService.java) checks room availability. A stay includes the check-in day and excludes the check-out day, so a room can be booked from the day another guest leaves. The boundary cases are tested in [`ReservaServiceTest`](src/test/java/velune/service/ReservaServiceTest.java).
+2. **Error handling:** [`GlobalExceptionHandler`](src/main/java/velune/exception/GlobalExceptionHandler.java) turns business exceptions into `404` and `409`, and validation errors into `400`.
+3. **Transaction:** [`FuncionarioService`](src/main/java/velune/service/FuncionarioService.java) creates a staff shift and its notification in a single `@Transactional` operation.
+4. **Response DTO:** `GET /funcionarios/{id}/escalas` returns only name, role and shifts. Salary and age are not exposed.
+5. **CI:** [`ci.yml`](.github/workflows/ci.yml) runs `mvn test` on every push and pull request.
 
-O foco principal é aprender e aplicar:
-- Java e Spring Boot para construir uma API REST;
-- separação de responsabilidades entre Controller, Service e Repository;
-- persistência com Spring Data JPA / Hibernate e PostgreSQL;
-- validação de entradas, tratamento de erros e regras de negócio;
-- testes automatizados e evolução incremental do código.
+## API
 
-## Funcionalidades implementadas
+Field names and error messages are in Portuguese, the domain language of this project.
 
-- Cadastro e consulta de hóspedes com persistência no PostgreSQL.
-- Cadastro e consulta de quartos com persistência no PostgreSQL.
-- Cadastro e consulta de reservas.
-- Verificação de conflito de datas ao criar uma reserva.
-- Busca de reservas que incluem uma data específica pela API.
-- Cancelamento de reserva pela API, localizado atualmente pelo ID do quarto e uma data.
-- Interface web para navegar pelas seções de painel, hóspedes, quartos, reservas e equipe.
+| Method | Route | Description | Success | Errors |
+|---|---|---|---|---|
+| `GET` | `/hotel` | Health check | 200 | |
+| `GET` | `/hospedes` | List guests | 200 | |
+| `GET` | `/hospedes/{documento}` | Find a guest by document | 200 | 404 |
+| `POST` | `/hospedes` | Create a guest | 201 | 400, 409 |
+| `GET` | `/quartos` | List rooms | 200 | |
+| `POST` | `/quartos` | Create a room | 201 | 400, 409 |
+| `GET` | `/reservas` | List reservations | 200 | |
+| `GET` | `/reservas/{data}` | Reservations that include a date (`yyyy-MM-dd`) | 200 | |
+| `POST` | `/reservas` | Create a reservation | 201 | 400, 404, 409 |
+| `DELETE` | `/reservas/{quartoId}/{data}` | Cancel the reservation of a room on a date | 204 | 404 |
+| `GET` | `/funcionarios` | List employees | 200 | |
+| `POST` | `/funcionarios` | Create an employee | 201 | 400 |
+| `GET` | `/funcionarios/{id}` | Find an employee | 200 | 404 |
+| `POST` | `/funcionarios/{id}/escalas` | Assign a shift and create a notification | 201 | 400, 404 |
+| `GET` | `/funcionarios/{id}/escalas` | Employee name, role and shifts | 200 | 404 |
 
-## Tecnologias
+### Example: create a reservation
 
-| Tecnologia | Uso no projeto |
-|---|---|
-| **Java 25** | Linguagem principal |
-| **Spring Boot 4.1.1** | Aplicação backend |
-| **Spring Web** | Endpoints HTTP / REST |
-| **Bean Validation** | Validação dos dados de entrada |
-| **Spring Data JPA / Hibernate** | Persistência e mapeamento objeto-relacional |
-| **PostgreSQL** | Banco de dados relacional |
-| **Maven** | Dependências e execução da aplicação |
-| **JUnit e Mockito** | Ferramentas para testes |
-| **HTML, CSS e JavaScript** | Interface web servida pela aplicação |
+`POST /reservas`
 
-## Arquitetura
-
-A API segue uma estrutura em camadas:
-
-```text
-Cliente HTTP / Interface web
-          |
-          v
-      Controller  -> recebe requisições e encaminha os dados
-          |
-          v
-        Service   -> aplica regras de negócio
-          |
-          v
-      Repository  -> acessa os dados
-          |
-          v
-      PostgreSQL
+```json
+{
+  "hospedeId": 1,
+  "quartoId": 1,
+  "dataCheckIn": "2026-12-10",
+  "dataCheckOut": "2026-12-15",
+  "observacao": "Late arrival"
+}
 ```
 
-- **Controller:** expõe os endpoints e conecta as requisições à aplicação.
-- **Service:** concentra regras como a verificação de disponibilidade de quartos.
-- **Repository:** usa Spring Data JPA para consultar e persistir entidades.
-- **DTO:** representa os dados recebidos pela API.
-- **Model:** representa as entidades e os conceitos do domínio.
-- **Exception handling:** organiza o tratamento de erros e respostas de validação.
+Returns `201 Created`. If the room is already booked in that period, it returns `409 Conflict` with a message.
 
-O Spring Boot também serve os arquivos estáticos de `src/main/resources/static`; o JavaScript da interface consome os endpoints da API.
+### Example: employee shifts
 
-> O repositório também contém classes de estudo anteriores, como `Main`, `Hotel`, `Recepcao` e `RH`, que usam listas em memória. Elas são exercícios separados do fluxo atual com Spring Data JPA.
+`GET /funcionarios/1/escalas`
 
-## Endpoints disponíveis
+```json
+{
+  "nome": "Ronaldo",
+  "cargo": "GERENTE",
+  "escalas": [
+    { "turno": "MANHA", "data": "2026-12-10" },
+    { "turno": "MANHA", "data": "2026-12-11" }
+  ]
+}
+```
 
-| Método | Rota | Descrição |
-|---|---|---|
-| `GET` | `/hotel` | Verifica se a aplicação responde |
-| `GET` | `/hospedes` | Lista hóspedes |
-| `GET` | `/hospedes/{documento}` | Busca hóspede pelo documento |
-| `POST` | `/hospedes` | Cadastra hóspede |
-| `GET` | `/quartos` | Lista quartos |
-| `POST` | `/quartos` | Cadastra quarto |
-| `GET` | `/reservas` | Lista reservas |
-| `GET` | `/reservas/{data}` | Busca reservas que incluem a data (`yyyy-MM-dd`) |
-| `POST` | `/reservas` | Cria reserva |
-| `DELETE` | `/reservas/{quartoId}/{data}` | Cancela reserva localizada pelo quarto e data |
+## Architecture
 
-Para criar uma reserva, `POST /reservas` recebe `hospedeId`, `quartoId`, `dataCheckIn`, `dataCheckOut` e, opcionalmente, `observacao`. As datas usam o formato `yyyy-MM-dd`, e o check-out deve ser posterior ao check-in.
+```text
+HTTP client / web UI
+        |
+        v
+   Controller   receives the request, validates the request DTO
+        |
+        v
+    Service     business rules
+        |
+        v
+   Repository   Spring Data JPA
+        |
+        v
+   PostgreSQL
+```
 
-A busca por data considera o check-in como parte da estadia e o check-out como o primeiro dia fora dela.
+```text
+velune
+├── controller   REST endpoints
+├── service      business rules
+├── repository   Spring Data JPA interfaces
+├── model        JPA entities and enums
+├── dto          request and response objects
+└── exception    custom exceptions and the global handler
+```
 
-## Executar localmente
+## Design decisions
 
-### Pré-requisitos
+- **Rules live in the service layer.** Repositories only read and write data.
+- **Uniqueness is enforced twice:** a check in the service gives a clear `409`, and `UNIQUE` constraints in the database ([`db/schema.sql`](db/schema.sql)) are the final guarantee. This applies to the guest document and the room number.
+- **Business exceptions are unchecked** and handled in one place, so controllers and services stay free of `try/catch`.
+- **Request DTOs with Bean Validation** keep invalid data out of the services.
+- **The database schema is explicit SQL**, and Hibernate does not alter tables.
+- **Services are tested with Mockito**, so the tests need no database and run fast in CI.
 
-- JDK 25
-- Maven
-- PostgreSQL
+## Tests
 
-### 1. Clonar o repositório
+There are 10 unit tests for the service layer (JUnit 5 and Mockito). They cover:
+
+- duplicate guests and duplicate rooms are rejected;
+- room availability, including the check-out day boundary and overlapping dates;
+- assigning a shift saves the employee with one shift and one notification;
+- the employee shifts card is built correctly, and a missing employee gives a not-found error.
+
+Run them without a database:
+
+```bash
+mvn test
+```
+
+## Run locally
+
+Requirements: JDK 25, Maven and PostgreSQL.
+
+1. Clone the repository:
 
 ```bash
 git clone https://github.com/MarcosEduardoDev/Velune.git
 cd Velune
 ```
 
-### 2. Preparar o banco de dados
+2. Create a PostgreSQL database named `Velune` and run [`db/schema.sql`](db/schema.sql) in it. The script is safe to run more than once.
 
-Crie um banco PostgreSQL chamado `Velune`. **Atenção:** neste momento, o projeto ainda não inclui migrações nem um script completo para criar o schema. As tabelas de hóspedes, quartos e reservas precisam existir e corresponder às entidades JPA antes de iniciar a aplicação.
-
-### 3. Configurar a conexão
-
-No PowerShell, defina as variáveis de ambiente para a sessão atual do terminal:
+3. Set the connection in your terminal (PowerShell example). Never commit real passwords.
 
 ```powershell
 $env:SPRING_DATASOURCE_URL = "jdbc:postgresql://localhost:5432/Velune"
-$env:SPRING_DATASOURCE_USERNAME = "seu_usuario"
-$env:SPRING_DATASOURCE_PASSWORD = "sua_senha"
+$env:SPRING_DATASOURCE_USERNAME = "your_user"
+$env:SPRING_DATASOURCE_PASSWORD = "your_password"
 ```
 
-Use suas próprias credenciais e nunca versione senhas reais.
-
-### 4. Iniciar a aplicação
+4. Start the application:
 
 ```bash
 mvn spring-boot:run
 ```
 
-Com o banco e o schema configurados, acesse [http://localhost:8080](http://localhost:8080).
+Open `http://localhost:8080/hotel` to check that the API responds.
 
-## Estado atual e próximos passos
+## Known limitations
 
-O projeto está em construção. As limitações conhecidas incluem:
+- **No authentication or authorization.**
+- **Double booking is possible under concurrency.** The availability check runs in Java before saving, so two simultaneous requests could both pass. Database-level protection is planned.
+- **Money uses `double`** (salaries and room prices). `BigDecimal` is planned.
+- **Most endpoints return entities.** Response DTOs exist only where an entity would expose sensitive fields (employee shifts).
+- **Cancellation finds a reservation by room and date**, not by reservation id.
+- **No pagination.**
+- **Tests cover the service layer only.** There are no controller or integration tests yet.
+- **No migration tool and no Docker setup yet.** The schema is a single SQL script.
 
-- A interface de reservas ainda não usa a busca por data disponível na API.
-- O cancelamento atual identifica uma reserva por quarto e data, em vez de selecionar diretamente uma reserva específica.
-- A seção de equipe e alguns indicadores do painel são demonstrações visuais sem API ligada ao banco.
-- Ainda não há autenticação, autorização ou migrações do banco de dados.
+## Roadmap
 
-Próximas melhorias:
-- Tornar o cancelamento direcionado a uma reserva específica.
-- Conectar a busca por data à interface.
-- Adicionar scripts de schema ou uma ferramenta de migração.
-- Expandir os testes automatizados.
-- Evoluir o módulo de equipe e substituir os dados de demonstração.
+- Docker Compose with PostgreSQL
+- OpenAPI / Swagger documentation
+- Database migrations with Flyway
+- Integration tests (controllers and repositories)
+- Reservation endpoints by id
+- Response DTOs for every endpoint
+- Vue.js front end
 
----
+## About the web UI
 
-<p align="center">
-  Projeto pessoal de aprendizado prático em <strong>Java Backend e Spring Boot</strong>.
-</p>
+The static web UI in `src/main/resources/static` was generated with AI assistance. The focus of this project is the backend. The team page of the UI still uses demo data.
+
+## Author
+
+**Marcos Eduardo Oliveira Silva**, junior Java backend developer.
+[LinkedIn](https://www.linkedin.com/in/marcos-eduardo-245587345/) · [GitHub](https://github.com/MarcosEduardoDev)

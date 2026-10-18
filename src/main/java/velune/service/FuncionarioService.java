@@ -46,7 +46,7 @@ public class FuncionarioService {
                 .orElseThrow(() -> new FuncionarioNaoEncontradoException("Funcionário não encontrado."));
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Funcionario definirEscala(Long funcionarioId, Turno turno, LocalDate data){
 
         Funcionario funcionario = buscarPorId(funcionarioId);
@@ -56,7 +56,6 @@ public class FuncionarioService {
 
         return repository.save(funcionario);
     }
-
 
     @Transactional(readOnly = true)
     public FuncionarioResponseDTO escalaFuncionario(Long funcionarioId){
