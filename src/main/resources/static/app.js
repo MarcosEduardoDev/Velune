@@ -58,6 +58,9 @@ function formatDate(value) {
 $("#today-label").textContent = new Intl.DateTimeFormat("pt-BR", {
   weekday: "long", day: "2-digit", month: "long"
 }).format(new Date());
+$("#dashboard-date").textContent = new Intl.DateTimeFormat("pt-BR", {
+  weekday: "long", day: "2-digit", month: "long", year: "numeric"
+}).format(new Date());
 function showToast(message) {
   const toast = $("#toast");
   toast.textContent = message;
@@ -203,15 +206,14 @@ function updateRoomSummary() {
   $("#room-available-count").textContent = String(available).padStart(2, "0");
   $("#room-total-count").textContent = String(rooms.length).padStart(2, "0");
   $("#room-all-count").textContent = String(rooms.length).padStart(2, "0");
-  $("#dashboard-room-occupied").textContent = String(occupied);
   $("#dashboard-room-count-total").textContent = String(rooms.length);
-  $("#dashboard-room-rate").textContent = `${rate}%`;
   $("#dashboard-occupancy").textContent = `${rate}%`;
   $("#dashboard-occupied-rooms").textContent = `${occupied} quartos`;
-  $("#dashboard-room-caption").textContent = `ocupados de ${rooms.length}`;
+  $("#dashboard-occupancy-copy").textContent = `${rate}%`;
+  $("#dashboard-occupied-copy").textContent = `${occupied} quartos ocupados`;
+  $("#dashboard-total-copy").textContent = String(rooms.length);
   $("#dashboard-occupied-legend").textContent = String(occupied);
   $("#dashboard-available-legend").textContent = String(available);
-  $("#dashboard-occupancy-bar").style.width = `${rate}%`
 }
 function fillReservationOptions() {
   const guestSelect = $("#reservation-guest"),
