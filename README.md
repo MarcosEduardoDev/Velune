@@ -1,77 +1,106 @@
 # Velune
 
-Projeto de estudo para praticar Java e construir, passo a passo, uma aplicação de gestão hoteleira. O objetivo é aprender lógica, orientação a objetos, SQL, Spring e a arquitetura usada em aplicações backend.
+<p align="center">
+  <strong>Hotel Management System · Java Backend Project</strong><br>
+  Uma aplicação em desenvolvimento para praticar construção de APIs backend com Java e Spring Boot, usando um domínio realista de gestão hoteleira.
+</p>
 
-> **Status:** em desenvolvimento. A interface web já está conectada às operações de hóspedes, quartos e reservas. O módulo de equipe e alguns indicadores do painel ainda usam dados de demonstração.
+<p align="center">
+  <img src="https://img.shields.io/badge/Java-25-ED8B00?style=flat-square&logo=openjdk&logoColor=white" alt="Java 25">
+  <img src="https://img.shields.io/badge/Spring_Boot-4.1.1-6DB33F?style=flat-square&logo=springboot&logoColor=white" alt="Spring Boot">
+  <img src="https://img.shields.io/badge/PostgreSQL-Database-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Maven-Build-C71A36?style=flat-square&logo=apachemaven&logoColor=white" alt="Maven">
+  <img src="https://img.shields.io/badge/JUnit_+_Mockito-Testing-25A162?style=flat-square" alt="JUnit and Mockito">
+</p>
 
-## O que já existe
+> **Status: em desenvolvimento.** Hóspedes, quartos e reservas estão conectados à API e ao PostgreSQL. O módulo de equipe e alguns indicadores do painel ainda usam dados de demonstração.
 
-- Cadastro e consulta de hóspedes, quartos e reservas com persistência em PostgreSQL.
+---
+
+## Visão geral
+
+O **Velune** é um projeto prático para desenvolver minhas habilidades em backend Java. Em vez de ficar apenas em exercícios isolados, estou construindo uma aplicação que reúne regras de negócio, persistência de dados, validação e uma interface web.
+
+O foco principal é aprender e aplicar:
+- Java e Spring Boot para construir uma API REST;
+- separação de responsabilidades entre Controller, Service e Repository;
+- persistência com Spring Data JPA / Hibernate e PostgreSQL;
+- validação de entradas, tratamento de erros e regras de negócio;
+- testes automatizados e evolução incremental do código.
+
+## Funcionalidades implementadas
+
+- Cadastro e consulta de hóspedes com persistência no PostgreSQL.
+- Cadastro e consulta de quartos com persistência no PostgreSQL.
+- Cadastro e consulta de reservas.
 - Verificação de conflito de datas ao criar uma reserva.
-- Busca de reservas que incluem uma data informada.
-- Cancelamento pela API, atualmente localizado pelo ID do quarto e uma data.
-- Interface web escura com painel, hóspedes, quartos, reservas e equipe.
-
-### Limites conhecidos
-
-- A tela de reservas carrega a lista geral. A busca por data existe na API, mas a interface ainda não a usa para listar reservas de uma data escolhida.
-- O fluxo planejado é escolher uma reserva da lista e cancelar exatamente aquela reserva. Hoje o cancelamento usa quarto e data.
-- RH/equipe e alguns indicadores são exemplos visuais, sem API REST ligada ao banco.
-- Não há autenticação, autorização ou scripts de migração do banco.
+- Busca de reservas que incluem uma data específica pela API.
+- Cancelamento de reserva pela API, localizado atualmente pelo ID do quarto e uma data.
+- Interface web para navegar pelas seções de painel, hóspedes, quartos, reservas e equipe.
 
 ## Tecnologias
 
-- Java 25; Spring Boot 4.1.1; Spring Web; Bean Validation.
-- Spring Data JPA / Hibernate; PostgreSQL; Maven.
-- JUnit e Mockito.
-- HTML, CSS e JavaScript na interface (sem React neste momento).
+| Tecnologia | Uso no projeto |
+|---|---|
+| **Java 25** | Linguagem principal |
+| **Spring Boot 4.1.1** | Aplicação backend |
+| **Spring Web** | Endpoints HTTP / REST |
+| **Bean Validation** | Validação dos dados de entrada |
+| **Spring Data JPA / Hibernate** | Persistência e mapeamento objeto-relacional |
+| **PostgreSQL** | Banco de dados relacional |
+| **Maven** | Dependências e execução da aplicação |
+| **JUnit e Mockito** | Ferramentas para testes |
+| **HTML, CSS e JavaScript** | Interface web servida pela aplicação |
 
 ## Arquitetura
 
-Na API, uma requisição segue este caminho:
+A API segue uma estrutura em camadas:
 
-**Navegador ou cliente HTTP → Controller → Service → Repository → PostgreSQL**
+```text
+Cliente HTTP / Interface web
+          |
+          v
+      Controller  -> recebe requisições e encaminha os dados
+          |
+          v
+        Service   -> aplica regras de negócio
+          |
+          v
+      Repository  -> acessa os dados
+          |
+          v
+      PostgreSQL
+```
 
-- **Controller:** recebe a requisição HTTP, valida a entrada e chama o service.
-- **Service:** concentra as regras de negócio, como verificar se um quarto está livre.
-- **Repository:** usa Spring Data JPA para consultar e salvar entidades no banco.
-- **Model:** representa os conceitos do sistema e, nos casos persistidos, as entidades JPA.
-- **DTO:** define os dados aceitos na entrada da API.
+- **Controller:** expõe os endpoints e conecta as requisições à aplicação.
+- **Service:** concentra regras como a verificação de disponibilidade de quartos.
+- **Repository:** usa Spring Data JPA para consultar e persistir entidades.
+- **DTO:** representa os dados recebidos pela API.
+- **Model:** representa as entidades e os conceitos do domínio.
+- **Exception handling:** organiza o tratamento de erros e respostas de validação.
 
-O Spring serve os arquivos de `src/main/resources/static`. O navegador carrega o HTML, CSS e JavaScript; o JavaScript consulta a API.
+O Spring Boot também serve os arquivos estáticos de `src/main/resources/static`; o JavaScript da interface consome os endpoints da API.
 
-Há classes de estudo mais antigas, como `Main`, `Hotel`, `Recepcao` e `RH`, que trabalham com listas em memória. Elas demonstram lógica e orientação a objetos, mas são separadas do fluxo Spring/JPA usado pela interface.
+> O repositório também contém classes de estudo anteriores, como `Main`, `Hotel`, `Recepcao` e `RH`, que usam listas em memória. Elas são exercícios separados do fluxo atual com Spring Data JPA.
 
-## Interface web
+## Endpoints disponíveis
 
-Com a aplicação iniciada, abra `http://localhost:8080`.
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/hotel` | Verifica se a aplicação responde |
+| `GET` | `/hospedes` | Lista hóspedes |
+| `GET` | `/hospedes/{documento}` | Busca hóspede pelo documento |
+| `POST` | `/hospedes` | Cadastra hóspede |
+| `GET` | `/quartos` | Lista quartos |
+| `POST` | `/quartos` | Cadastra quarto |
+| `GET` | `/reservas` | Lista reservas |
+| `GET` | `/reservas/{data}` | Busca reservas que incluem a data (`yyyy-MM-dd`) |
+| `POST` | `/reservas` | Cria reserva |
+| `DELETE` | `/reservas/{quartoId}/{data}` | Cancela reserva localizada pelo quarto e data |
 
-- **Painel:** visão geral; alguns números, agenda e gráficos são demonstrações.
-- **Hóspedes:** lista, pesquisa e cadastro via API.
-- **Quartos:** lista, filtros e cadastro via API.
-- **Reservas:** lista, cadastro e cancelamento via API.
-- **Equipe:** conteúdo de demonstração, sem persistência.
+Para criar uma reserva, `POST /reservas` recebe `hospedeId`, `quartoId`, `dataCheckIn`, `dataCheckOut` e, opcionalmente, `observacao`. As datas usam o formato `yyyy-MM-dd`, e o check-out deve ser posterior ao check-in.
 
-## Endpoints atuais
-
-| Método | Rota | Descrição | Sucesso |
-|---|---|---|---|
-| `GET` | `/hotel` | Verifica se a aplicação responde | `200 OK` |
-| `GET` | `/hospedes` | Lista hóspedes | `200 OK` |
-| `GET` | `/hospedes/{documento}` | Busca hóspede pelo documento | `200 OK` ou `404 Not Found` |
-| `POST` | `/hospedes` | Cadastra hóspede | `201 Created` |
-| `GET` | `/quartos` | Lista quartos | `200 OK` |
-| `POST` | `/quartos` | Cadastra quarto | `201 Created` |
-| `GET` | `/reservas` | Lista reservas | `200 OK` |
-| `GET` | `/reservas/{data}` | Lista reservas que incluem a data (`yyyy-MM-dd`) | `200 OK` |
-| `POST` | `/reservas` | Cria reserva | `201 Created` |
-| `DELETE` | `/reservas/{quartoId}/{data}` | Cancela reserva localizada pelo quarto e pela data | `204 No Content` |
-
-A busca por data considera o check-in como parte da estadia e o check-out como o primeiro dia fora dela. Uma reserva com check-out em 10 de junho não aparece como ocupando o quarto nesse dia.
-
-### Criar uma reserva
-
-O corpo de `POST /reservas` recebe `hospedeId`, `quartoId`, `dataCheckIn`, `dataCheckOut` e, opcionalmente, `observacao`. Use datas no formato `yyyy-MM-dd`; o check-out deve ser posterior ao check-in.
+A busca por data considera o check-in como parte da estadia e o check-out como o primeiro dia fora dela.
 
 ## Executar localmente
 
@@ -81,16 +110,20 @@ O corpo de `POST /reservas` recebe `hospedeId`, `quartoId`, `dataCheckIn`, `data
 - Maven
 - PostgreSQL
 
-Clone o repositório:
+### 1. Clonar o repositório
 
 ```bash
 git clone https://github.com/MarcosEduardoDev/Velune.git
 cd Velune
 ```
 
-Crie no PostgreSQL um banco chamado `Velune`. O projeto ainda não possui migrações nem um script completo do schema; as tabelas de hóspedes, quartos e reservas precisam existir e corresponder às entidades JPA.
+### 2. Preparar o banco de dados
 
-Configure a conexão por variáveis de ambiente. Exemplo no PowerShell:
+Crie um banco PostgreSQL chamado `Velune`. **Atenção:** neste momento, o projeto ainda não inclui migrações nem um script completo para criar o schema. As tabelas de hóspedes, quartos e reservas precisam existir e corresponder às entidades JPA antes de iniciar a aplicação.
+
+### 3. Configurar a conexão
+
+No PowerShell, defina as variáveis de ambiente para a sessão atual do terminal:
 
 ```powershell
 $env:SPRING_DATASOURCE_URL = "jdbc:postgresql://localhost:5432/Velune"
@@ -98,52 +131,34 @@ $env:SPRING_DATASOURCE_USERNAME = "seu_usuario"
 $env:SPRING_DATASOURCE_PASSWORD = "sua_senha"
 ```
 
-Essas variáveis valem para a sessão atual do terminal. Não coloque senhas reais em arquivos versionados.
+Use suas próprias credenciais e nunca versione senhas reais.
 
-Com o banco configurado e o schema preparado, inicie a aplicação:
+### 4. Iniciar a aplicação
 
 ```bash
 mvn spring-boot:run
 ```
 
-Depois, abra `http://localhost:8080` no navegador.
+Com o banco e o schema configurados, acesse [http://localhost:8080](http://localhost:8080).
 
-## Estrutura principal
+## Estado atual e próximos passos
 
-```text
-src/
-├── main/
-│   ├── java/velune/
-│   │   ├── controller/   # Endpoints REST
-│   │   ├── dto/          # Dados de entrada e validações
-│   │   ├── exception/    # Exceções e respostas de erro
-│   │   ├── model/        # Entidades e modelos de domínio
-│   │   ├── repository/   # Acesso com Spring Data JPA
-│   │   └── service/      # Regras de negócio
-│   └── resources/
-│       ├── application.properties
-│       └── static/       # HTML, CSS e JavaScript
-└── test/                 # Testes automatizados
-```
+O projeto está em construção. As limitações conhecidas incluem:
 
-## Conceitos praticados
+- A interface de reservas ainda não usa a busca por data disponível na API.
+- O cancelamento atual identifica uma reserva por quarto e data, em vez de selecionar diretamente uma reserva específica.
+- A seção de equipe e alguns indicadores do painel são demonstrações visuais sem API ligada ao banco.
+- Ainda não há autenticação, autorização ou migrações do banco de dados.
 
-- Lógica, métodos, coleções e orientação a objetos.
-- Enums, Streams, lambdas e `Optional`.
-- API REST, injeção de dependência e separação de responsabilidades.
-- DTOs, validação e tratamento de exceções.
-- Entidades JPA, relacionamentos e consultas ao banco.
-- Integração entre JavaScript no navegador e uma API Spring.
-
-## Próximos passos
-
-- Consolidar o cancelamento para selecionar uma reserva específica.
-- Conectar a busca por data da API à interface.
-- Preparar o schema do banco por script ou ferramenta de migração.
+Próximas melhorias:
+- Tornar o cancelamento direcionado a uma reserva específica.
+- Conectar a busca por data à interface.
+- Adicionar scripts de schema ou uma ferramenta de migração.
+- Expandir os testes automatizados.
 - Evoluir o módulo de equipe e substituir os dados de demonstração.
-- Ampliar e executar os testes depois de concluir a lógica e os frameworks.
-- Adicionar autenticação e autorização antes de usar dados reais.
 
 ---
 
-Projeto de estudo para evolução prática em desenvolvimento backend com Java.
+<p align="center">
+  Projeto pessoal de aprendizado prático em <strong>Java Backend e Spring Boot</strong>.
+</p>
