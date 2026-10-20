@@ -1,7 +1,7 @@
 services:
   banco:
-    image: postgres:16-alpine
-    container_name: velune-db
+    image: postgres:16-alpinegit
+    container_name: velune-db-alpine
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: velune
