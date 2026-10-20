@@ -7,39 +7,55 @@
 
 🇬🇧 [Read in English](README.md)
 
-API REST de gestão hoteleira, feita com Java e Spring Boot. Ela gerencia hóspedes, quartos, reservas e escalas de funcionários, e guarda os dados no PostgreSQL. O projeto tem arquitetura em camadas, regras de negócio cobertas por testes unitários e um pipeline de CI que roda os testes a cada push.
+API REST para gestão hoteleira, desenvolvida com Java 25 e Spring Boot. O Velune organiza hóspedes, quartos, reservas e escalas de funcionários, usando PostgreSQL para persistência.
 
-> **Status:** projeto de portfólio em desenvolvimento ativo. Veja as [Limitações conhecidas](#limitações-conhecidas).
+O projeto está em desenvolvimento ativo e reúne uma API em camadas, regras de negócio testadas com JUnit e Mockito, uma interface web estática e um ambiente de desenvolvimento com PostgreSQL via Docker Compose.
 
-## Um tour de 2 minutos
+## Funcionalidades
 
-1. **Regra de reservas:** o [`ReservaService`](src/main/java/velune/service/ReservaService.java) verifica a disponibilidade do quarto. Uma estadia inclui o dia do check-in e exclui o dia do check-out, então um quarto pode ser reservado a partir do dia em que outro hóspede sai. Os casos de borda estão testados no [`ReservaServiceTest`](src/test/java/velune/service/ReservaServiceTest.java).
-2. **Tratamento de erros:** o [`GlobalExceptionHandler`](src/main/java/velune/exception/GlobalExceptionHandler.java) transforma exceções de negócio em `404` e `409`, e erros de validação em `400`.
-3. **Transação:** o [`FuncionarioService`](src/main/java/velune/service/FuncionarioService.java) cria uma escala e a notificação dela em uma única operação `@Transactional`.
-4. **DTO de resposta:** `GET /funcionarios/{id}/escalas` devolve só nome, cargo e escalas. Salário e idade não são expostos.
-5. **CI:** o [`ci.yml`](.github/workflows/ci.yml) roda `mvn test` a cada push e pull request.
+- Cadastro e consulta de hóspedes, com verificação de documento duplicado.
+- Cadastro e listagem de quartos, com número único e tipos predefinidos.
+- Criação, consulta por data e cancelamento de reservas.
+- Verificação de disponibilidade de quartos durante o período solicitado.
+- Cadastro e consulta de funcionários.
+- Registro de escalas de funcionários, com criação de uma notificação associada.
+- Interface web para navegar pelo painel, hóspedes, quartos, reservas e equipe.
+
+## Tecnologias
+
+- Java 25
+- Spring Boot 4.1.1
+- Spring Web e Bean Validation
+- Spring Data JPA
+- PostgreSQL 16
+- Maven
+- JUnit 5 e Mockito
+- Docker Compose
+- GitHub Actions
 
 ## API
 
-Os nomes dos campos e as mensagens de erro estão em português, a linguagem de domínio do projeto.
+Os nomes das rotas, dos campos e das mensagens de erro seguem o domínio do projeto e estão em português.
 
 | Método | Rota | Descrição | Sucesso | Erros |
 |---|---|---|---|---|
-| `GET` | `/hotel` | Verifica se a API responde | 200 | |
-| `GET` | `/hospedes` | Lista hóspedes | 200 | |
-| `GET` | `/hospedes/{documento}` | Busca hóspede pelo documento | 200 | 404 |
-| `POST` | `/hospedes` | Cadastra hóspede | 201 | 400, 409 |
-| `GET` | `/quartos` | Lista quartos | 200 | |
-| `POST` | `/quartos` | Cadastra quarto | 201 | 400, 409 |
-| `GET` | `/reservas` | Lista reservas | 200 | |
-| `GET` | `/reservas/{data}` | Reservas que incluem a data (`yyyy-MM-dd`) | 200 | |
-| `POST` | `/reservas` | Cria reserva | 201 | 400, 404, 409 |
-| `DELETE` | `/reservas/{quartoId}/{data}` | Cancela a reserva de um quarto em uma data | 204 | 404 |
-| `GET` | `/funcionarios` | Lista funcionários | 200 | |
-| `POST` | `/funcionarios` | Cadastra funcionário | 201 | 400 |
-| `GET` | `/funcionarios/{id}` | Busca funcionário | 200 | 404 |
+| `GET` | `/hotel` | Verifica se a API está respondendo | 200 | |
+| `GET` | `/hospedes` | Lista os hóspedes | 200 | |
+| `GET` | `/hospedes/{documento}` | Busca um hóspede pelo documento | 200 | 404 |
+| `POST` | `/hospedes` | Cadastra um hóspede | 201 | 400, 409 |
+| `GET` | `/quartos` | Lista os quartos | 200 | |
+| `POST` | `/quartos` | Cadastra um quarto | 201 | 400, 409 |
+| `GET` | `/reservas` | Lista as reservas | 200 | |
+| `GET` | `/reservas/{data}` | Lista reservas ativas na data (`yyyy-MM-dd`) | 200 | |
+| `POST` | `/reservas` | Cria uma reserva | 201 | 400, 404, 409 |
+| `DELETE` | `/reservas/{quartoId}/{data}` | Cancela a reserva ativa do quarto na data | 204 | 404 |
+| `GET` | `/funcionarios` | Lista os funcionários | 200 | |
+| `POST` | `/funcionarios` | Cadastra um funcionário | 201 | 400 |
+| `GET` | `/funcionarios/{id}` | Busca um funcionário pelo ID | 200 | 404 |
 | `POST` | `/funcionarios/{id}/escalas` | Define uma escala e cria uma notificação | 201 | 400, 404 |
-| `GET` | `/funcionarios/{id}/escalas` | Nome, cargo e escalas do funcionário | 200 | 404 |
+| `GET` | `/funcionarios/{id}/escalas` | Retorna nome, cargo e escalas do funcionário | 200 | 404 |
+
+Erros de validação retornam `400` com um objeto JSON que relaciona os campos às mensagens. Exceções de negócio retornam `404` ou `409`, conforme o caso.
 
 ### Exemplo: criar uma reserva
 
@@ -55,130 +71,136 @@ Os nomes dos campos e as mensagens de erro estão em português, a linguagem de 
 }
 ```
 
-Devolve `201 Created`. Se o quarto já estiver reservado no período, devolve `409 Conflict` com uma mensagem.
-
-### Exemplo: escalas de um funcionário
-
-`GET /funcionarios/1/escalas`
-
-```json
-{
-  "nome": "Ronaldo",
-  "cargo": "GERENTE",
-  "escalas": [
-    { "turno": "MANHA", "data": "2026-12-10" },
-    { "turno": "MANHA", "data": "2026-12-11" }
-  ]
-}
-```
+Uma reserva inclui o dia do check-in e exclui o dia do check-out. Assim, outra reserva pode começar no mesmo dia em que a estadia anterior termina. Um período inválido ou dados obrigatórios ausentes retornam `400`; hóspede ou quarto inexistente retorna `404`; conflito de disponibilidade retorna `409`.
 
 ## Arquitetura
 
+A API segue uma arquitetura em camadas:
+
 ```text
-Cliente HTTP / interface web
-        |
-        v
-   Controller   recebe a requisição, valida o DTO de entrada
-        |
-        v
-    Service     regras de negócio
-        |
-        v
-   Repository   Spring Data JPA
-        |
-        v
-   PostgreSQL
+Interface web / cliente HTTP
+             |
+             v
+        Controller   rotas REST e validação dos DTOs
+             |
+             v
+         Service      regras de negócio
+             |
+             v
+       Repository     acesso a dados com Spring Data JPA
+             |
+             v
+         PostgreSQL
 ```
+
+Os principais pacotes estão organizados por responsabilidade:
 
 ```text
 velune
 ├── controller   endpoints REST
 ├── service      regras de negócio
-├── repository   interfaces do Spring Data JPA
+├── repository   acesso a dados com Spring Data JPA
 ├── model        entidades JPA e enums
-├── dto          objetos de entrada e de resposta
-└── exception    exceções próprias e o tratador global
+├── dto          objetos de entrada e resposta
+└── exception    exceções de negócio e tratamento global
 ```
 
-## Decisões de projeto
+O schema SQL está em [`db/schema.sql`](db/schema.sql). O Docker Compose monta esse arquivo para inicialização do PostgreSQL.
 
-- **As regras ficam na camada de service.** Os repositories só leem e gravam dados.
-- **A unicidade é garantida duas vezes:** uma checagem no service devolve um `409` claro, e as constraints `UNIQUE` do banco ([`db/schema.sql`](db/schema.sql)) são a garantia final. Vale para o documento do hóspede e o número do quarto.
-- **As exceções de negócio são não verificadas** e tratadas em um só lugar, então controllers e services ficam sem `try/catch`.
-- **DTOs de entrada com Bean Validation** mantêm dados inválidos fora dos services.
-- **O schema do banco é SQL explícito**, e o Hibernate não altera as tabelas.
-- **Os services são testados com Mockito**, então os testes não precisam de banco e rodam rápido no CI.
+## Executar com Docker
+
+Pré-requisitos: Docker Desktop com Docker Compose, JDK 25 e Maven. O Compose inicia o banco PostgreSQL; a API é executada localmente com Maven.
+
+1. Clone o repositório:
+
+```powershell
+git clone https://github.com/MarcosEduardoDev/Velune.git
+cd Velune
+```
+
+2. Crie o arquivo `.env` e troque o valor de `POSTGRES_PASSWORD` por uma senha sua:
+
+```powershell
+copy .env.example .env
+```
+
+No Linux ou macOS, use `cp .env.example .env`.
+
+3. Inicie o banco:
+
+```powershell
+docker compose up -d
+```
+
+Na primeira inicialização do banco, o PostgreSQL executa `db/schema.sql` e cria as tabelas.
+
+4. Configure a conexão da API no PowerShell, usando a mesma senha definida em `.env`:
+
+```powershell
+$env:SPRING_DATASOURCE_URL = 'jdbc:postgresql://localhost:5433/velune'
+$env:SPRING_DATASOURCE_USERNAME = 'postgres'
+$env:SPRING_DATASOURCE_PASSWORD = 'a-mesma-senha-definida-no-env'
+mvn spring-boot:run
+```
+
+No Linux ou macOS, configure as mesmas variáveis com `export` e execute `mvn spring-boot:run`.
+
+5. Acesse <http://localhost:8080/hotel> para conferir a resposta da API. A interface web fica disponível em <http://localhost:8080/>. Se ainda não houver quartos cadastrados, `GET /quartos` retorna `[]`.
+
+Para parar e remover o container:
+
+```powershell
+docker compose down
+```
+
+O Compose não define um volume nomeado para os dados. A imagem do PostgreSQL pode criar um volume anônimo: `docker compose down` não o remove por padrão, e um próximo `up` não o reutiliza automaticamente. Para remover também esses volumes e reiniciar o banco sem os dados anteriores, use `docker compose down -v`. [Documentação do Docker Compose](https://docs.docker.com/reference/cli/docker/compose/down/).
+
+## Executar com PostgreSQL local
+
+Também é possível executar a API sem Docker. Para isso, instale JDK 25, Maven e PostgreSQL, crie um banco chamado `velune` e execute nele [`db/schema.sql`](db/schema.sql).
+
+Configure a conexão no PowerShell:
+
+```powershell
+$env:SPRING_DATASOURCE_URL = 'jdbc:postgresql://localhost:5432/velune'
+$env:SPRING_DATASOURCE_USERNAME = 'postgres'
+$env:SPRING_DATASOURCE_PASSWORD = 'sua_senha'
+mvn spring-boot:run
+```
+
+Não versione senhas reais. O arquivo `.env` está incluído no `.gitignore`.
 
 ## Testes
 
-São 10 testes unitários da camada de service (JUnit 5 e Mockito). Eles cobrem:
-
-- hóspedes e quartos duplicados são recusados;
-- disponibilidade de quarto, incluindo a borda do dia do check-out e datas que se sobrepõem;
-- definir uma escala salva o funcionário com uma escala e uma notificação;
-- o cartão de escalas do funcionário é montado corretamente, e um funcionário inexistente gera erro de não encontrado.
-
-Para rodar, sem banco de dados:
+Os testes atuais são testes unitários da camada de service, feitos com JUnit 5 e Mockito. Eles não precisam de banco de dados:
 
 ```bash
 mvn test
 ```
 
-## Executar localmente
+A suíte cobre cadastro de hóspedes e quartos, regras de disponibilidade de reservas, períodos sobrepostos, limite entre check-out e novo check-in, definição de escalas e montagem do DTO de escalas do funcionário.
 
-Requisitos: JDK 25, Maven e PostgreSQL.
+O workflow [`ci.yml`](.github/workflows/ci.yml) executa `mvn test` em pushes para `master` e em pull requests.
 
-1. Clone o repositório:
+## Interface web
 
-```bash
-git clone https://github.com/MarcosEduardoDev/Velune.git
-cd Velune
-```
+A interface estática fica em `src/main/resources/static` e é servida pela própria aplicação Spring Boot. Ela permite consultar e cadastrar hóspedes e quartos, além de criar, consultar e cancelar reservas.
 
-2. Crie um banco PostgreSQL chamado `Velune` e rode nele o [`db/schema.sql`](db/schema.sql). O script pode ser rodado mais de uma vez com segurança.
-
-3. Defina a conexão no terminal (exemplo em PowerShell). Nunca versione senhas reais.
-
-```powershell
-$env:SPRING_DATASOURCE_URL = "jdbc:postgresql://localhost:5432/Velune"
-$env:SPRING_DATASOURCE_USERNAME = "seu_usuario"
-$env:SPRING_DATASOURCE_PASSWORD = "sua_senha"
-```
-
-4. Inicie a aplicação:
-
-```bash
-mvn spring-boot:run
-```
-
-Abra `http://localhost:8080/hotel` para conferir que a API responde.
+Alguns elementos ainda usam dados de demonstração, como as movimentações do painel e a página da equipe. Portanto, a interface ainda não representa todas as operações da API com dados reais.
 
 ## Limitações conhecidas
 
-- **Sem autenticação nem autorização.**
-- **Overbooking é possível sob concorrência.** A checagem de disponibilidade roda em Java antes de salvar, então duas requisições simultâneas poderiam passar. Proteção no banco está planejada.
-- **Dinheiro usa `double`** (salários e preços dos quartos). `BigDecimal` está planejado.
-- **A maioria dos endpoints devolve entidades.** DTOs de resposta existem só onde a entidade exporia campos sensíveis (escalas de funcionário).
-- **O cancelamento localiza a reserva por quarto e data**, e não pelo id da reserva.
-- **Sem paginação.**
-- **Os testes cobrem só a camada de service.** Ainda não há testes de controller nem de integração.
-- **Ainda sem ferramenta de migração nem Docker.** O schema é um único script SQL.
-
-## Roteiro
-
-- Docker Compose com PostgreSQL
-- Documentação OpenAPI / Swagger
-- Migrações de banco com Flyway
-- Testes de integração (controllers e repositories)
-- Endpoints de reserva por id
-- DTOs de resposta em todos os endpoints
-- Front-end em Vue.js
-
-## Sobre a interface web
-
-A interface web estática em `src/main/resources/static` foi gerada com auxílio de IA. O foco deste projeto é o backend. A página de equipe da interface ainda usa dados de demonstração.
+- A API ainda não tem autenticação nem autorização.
+- A verificação de disponibilidade acontece na camada Java; duas solicitações simultâneas podem passar pela checagem antes de qualquer uma salvar a reserva.
+- Salários e valores de diárias usam `double`.
+- A maioria dos endpoints retorna entidades diretamente. O endpoint de escalas do funcionário usa DTO de resposta, mas os demais endpoints de funcionário ainda retornam a entidade.
+- O cancelamento localiza a reserva pelo quarto e por uma data, não pelo ID da reserva.
+- Ainda não há paginação.
+- Os testes cobrem a camada de service; ainda não há testes de controller nem de integração.
+- Ainda não há ferramenta de migração de banco. O schema está definido em um script SQL.
 
 ## Autor
 
-**Marcos Eduardo Oliveira Silva**, desenvolvedor Java backend júnior.
+**Marcos Eduardo Oliveira Silva** · Desenvolvedor Java Backend Júnior
+
 [LinkedIn](https://www.linkedin.com/in/marcos-eduardo-245587345/) · [GitHub](https://github.com/MarcosEduardoDev)
