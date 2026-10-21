@@ -50,6 +50,14 @@ public class ReservaController {
        return service.buscarReservasNaData(data);
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/reservas/{reservaId}")
+    public void deletarReservaPorId(@PathVariable Long reservaId){
+
+        service.novoCancelarReservaPorId(reservaId);
+    }
+
+
 
 
 

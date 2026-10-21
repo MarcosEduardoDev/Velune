@@ -1,9 +1,6 @@
 package velune.service;
 
-import velune.exception.HospedeNaoEncontradoException;
-import velune.exception.QuartoIndisponivelException;
-import velune.exception.QuartoNaoEncontradoException;
-import velune.exception.ReservaNaoEncontradaException;
+import velune.exception.*;
 import velune.model.Hospede;
 import velune.model.Quarto;
 import velune.model.Reserva;
@@ -82,6 +79,11 @@ public class ReservaService {
                .toList();
     }
 
+    public void novoCancelarReservaPorId(Long reservaId){
 
+        Reserva reserva = reservaRepository.findById(reservaId)
+                .orElseThrow(() -> new ReservaNaoEncontradaException("Reserva não encontrada."));
 
+        reservaRepository.delete(reserva);
+    }
 }
