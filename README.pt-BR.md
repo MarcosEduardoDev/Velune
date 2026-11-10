@@ -7,19 +7,21 @@
 
 🇬🇧 [Read in English](README.md)
 
-API REST para gestão hoteleira, desenvolvida com Java 25 e Spring Boot. O Velune organiza hóspedes, quartos, reservas e escalas de funcionários, usando PostgreSQL para persistência.
+O Velune é uma API REST para gestão hoteleira, desenvolvida com Java 25 e Spring Boot. O sistema gerencia hóspedes, quartos, reservas e escalas de funcionários, usando PostgreSQL para persistência dos dados.
 
-O projeto está em desenvolvimento ativo e reúne uma API em camadas, regras de negócio testadas com JUnit e Mockito, uma interface web estática e um ambiente de desenvolvimento com PostgreSQL via Docker Compose.
+O projeto está em desenvolvimento ativo. Ele reúne uma API em camadas, regras de negócio testadas com JUnit e Mockito, documentação OpenAPI com Swagger UI, uma interface web estática e um ambiente de desenvolvimento com PostgreSQL via Docker Compose.
 
 ## Funcionalidades
 
-- Cadastro e consulta de hóspedes, com verificação de documento duplicado.
-- Cadastro e listagem de quartos, com número único e tipos predefinidos.
-- Criação, consulta por data e cancelamento de reservas.
-- Verificação de disponibilidade de quartos durante o período solicitado.
-- Cadastro e consulta de funcionários.
-- Registro de escalas de funcionários, com criação de uma notificação associada.
-- Interface web para navegar pelo painel, hóspedes, quartos, reservas e equipe.
+- Cadastrar e consultar hóspedes, com verificação de documento duplicado.
+- Cadastrar e listar quartos, com número único e tipos predefinidos.
+- Criar e listar reservas, incluindo busca por data.
+- Cancelar reservas pelo ID ou pelo quarto e uma data.
+- Verificar a disponibilidade dos quartos durante o período solicitado.
+- Cadastrar e consultar funcionários.
+- Definir escalas de funcionários e criar uma notificação associada.
+- Usar uma interface web para navegar pelo painel, hóspedes, quartos, reservas e equipe.
+- Consultar a documentação da API pelo Swagger UI e OpenAPI.
 
 ## Tecnologias
 
@@ -27,6 +29,7 @@ O projeto está em desenvolvimento ativo e reúne uma API em camadas, regras de 
 - Spring Boot 4.1.1
 - Spring Web e Bean Validation
 - Spring Data JPA
+- Springdoc OpenAPI / Swagger UI
 - PostgreSQL 16
 - Maven
 - JUnit 5 e Mockito
@@ -48,12 +51,15 @@ Os nomes das rotas, dos campos e das mensagens de erro seguem o domínio do proj
 | `GET` | `/reservas` | Lista as reservas | 200 | |
 | `GET` | `/reservas/{data}` | Lista reservas ativas na data (`yyyy-MM-dd`) | 200 | |
 | `POST` | `/reservas` | Cria uma reserva | 201 | 400, 404, 409 |
+| `DELETE` | `/reservas/{reservaId}` | Cancela uma reserva pelo ID | 204 | 404 |
 | `DELETE` | `/reservas/{quartoId}/{data}` | Cancela a reserva ativa do quarto na data | 204 | 404 |
 | `GET` | `/funcionarios` | Lista os funcionários | 200 | |
 | `POST` | `/funcionarios` | Cadastra um funcionário | 201 | 400 |
 | `GET` | `/funcionarios/{id}` | Busca um funcionário pelo ID | 200 | 404 |
 | `POST` | `/funcionarios/{id}/escalas` | Define uma escala e cria uma notificação | 201 | 400, 404 |
 | `GET` | `/funcionarios/{id}/escalas` | Retorna nome, cargo e escalas do funcionário | 200 | 404 |
+
+A documentação interativa fica em <http://localhost:8080/swagger-ui/index.html>. O documento OpenAPI está disponível em <http://localhost:8080/v3/api-docs>.
 
 Erros de validação retornam `400` com um objeto JSON que relaciona os campos às mensagens. Exceções de negócio retornam `404` ou `409`, conforme o caso.
 
@@ -109,7 +115,7 @@ O schema SQL está em [`db/schema.sql`](db/schema.sql). O Docker Compose monta e
 
 ## Executar com Docker
 
-Pré-requisitos: Docker Desktop com Docker Compose, JDK 25 e Maven. O Compose inicia o banco PostgreSQL; a API é executada localmente com Maven.
+Pré-requisitos: Docker Desktop com Docker Compose, JDK 25 e Maven. O Docker Compose inicia o PostgreSQL; a API é executada localmente com Maven.
 
 1. Clone o repositório:
 
@@ -143,7 +149,14 @@ $env:SPRING_DATASOURCE_PASSWORD = 'a-mesma-senha-definida-no-env'
 mvn spring-boot:run
 ```
 
-No Linux ou macOS, configure as mesmas variáveis com `export` e execute `mvn spring-boot:run`.
+No Linux ou macOS, configure as mesmas variáveis com `export` e execute `mvn spring-boot:run`:
+
+```bash
+export SPRING_DATASOURCE_URL='jdbc:postgresql://localhost:5433/velune'
+export SPRING_DATASOURCE_USERNAME='postgres'
+export SPRING_DATASOURCE_PASSWORD='a-mesma-senha-definida-no-env'
+mvn spring-boot:run
+```
 
 5. Acesse <http://localhost:8080/hotel> para conferir a resposta da API. A interface web fica disponível em <http://localhost:8080/>. Se ainda não houver quartos cadastrados, `GET /quartos` retorna `[]`.
 
@@ -178,15 +191,17 @@ Os testes atuais são testes unitários da camada de service, feitos com JUnit 5
 mvn test
 ```
 
-A suíte cobre cadastro de hóspedes e quartos, regras de disponibilidade de reservas, períodos sobrepostos, limite entre check-out e novo check-in, definição de escalas e montagem do DTO de escalas do funcionário.
+A suíte cobre cadastro de hóspedes e quartos, regras de disponibilidade de reservas, períodos sobrepostos, limite entre check-out e novo check-in, cancelamento de reserva por ID, definição de escalas e criação do DTO de escalas do funcionário.
 
 O workflow [`ci.yml`](.github/workflows/ci.yml) executa `mvn test` em pushes para `master` e em pull requests.
 
 ## Interface web
 
-A interface estática fica em `src/main/resources/static` e é servida pela própria aplicação Spring Boot. Ela permite consultar e cadastrar hóspedes e quartos, além de criar, consultar e cancelar reservas.
+A interface estática fica em `src/main/resources/static` e é servida pela aplicação Spring Boot. Ela permite consultar e cadastrar hóspedes e quartos, além de criar, consultar e cancelar reservas.
 
-Alguns elementos ainda usam dados de demonstração, como as movimentações do painel e a página da equipe. Portanto, a interface ainda não representa todas as operações da API com dados reais.
+A interface cancela reservas pelo quarto e por uma data. O cancelamento por ID está disponível pela API e pelo Swagger UI, mas ainda não foi integrado à interface web.
+
+Alguns elementos ainda usam dados de demonstração, como as movimentações do painel, a página da equipe e alguns resumos de reservas. A interface ainda não representa todas as operações da API com dados reais.
 
 ## Limitações conhecidas
 
@@ -194,7 +209,6 @@ Alguns elementos ainda usam dados de demonstração, como as movimentações do 
 - A verificação de disponibilidade acontece na camada Java; duas solicitações simultâneas podem passar pela checagem antes de qualquer uma salvar a reserva.
 - Salários e valores de diárias usam `double`.
 - A maioria dos endpoints retorna entidades diretamente. O endpoint de escalas do funcionário usa DTO de resposta, mas os demais endpoints de funcionário ainda retornam a entidade.
-- O cancelamento localiza a reserva pelo quarto e por uma data, não pelo ID da reserva.
 - Ainda não há paginação.
 - Os testes cobrem a camada de service; ainda não há testes de controller nem de integração.
 - Ainda não há ferramenta de migração de banco. O schema está definido em um script SQL.

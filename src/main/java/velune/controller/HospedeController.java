@@ -10,7 +10,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-public class HotelController {
+public class HospedeController {
 
     @GetMapping("/hotel")
     public String hotel() {
@@ -19,7 +19,7 @@ public class HotelController {
 
     private final HospedeService service;
 
-    public HotelController(HospedeService service) {
+    public HospedeController(HospedeService service) {
         this.service = service;
     }
 
